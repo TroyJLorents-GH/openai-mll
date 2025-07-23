@@ -1,0 +1,37 @@
+# ===== FRONTEND (React/Node) =====
+frontend/node_modules/
+frontend/build/
+/frontend/node_modules
+/frontend/build
+/frontend/coverage
+/frontend/.pnp
+/frontend/.pnp.js
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+/frontend/.env.local
+/frontend/.env.development.local
+/frontend/.env.test.local
+/frontend/.env.production.local
+/frontend/*.env*
+
+# ===== BACKEND (Python) =====
+/backend/__pycache__/
+/backend/.venv/
+/backend/env/
+/backend/.env
+/backend/*.pyc
+/backend/*.pyo
+/backend/*.db
+/backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.DS_Store
+backend/.venv/
+backend/__pycache__/
+backend/.env
+
+# ===== GENERAL =====
+db/
+data/
+*.pyc
+.DS_Store

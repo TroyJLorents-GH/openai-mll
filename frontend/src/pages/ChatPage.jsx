@@ -24,28 +24,36 @@ export default function ChatPage() {
   const handleDragOver = (e) => e.preventDefault();
 
   // Send message
-  const sendMessage = async () => {
-    if (!input && !file) return;
+ const sendMessage = async () => {
+  if (!input && !file) return;
+
+  setMessages((prev) => [
+    ...prev,
+    { role: "user", content: input, fileName: file?.name }
+  ]);
+  setInput("");
+  setFile(null);
+
+  // --- Send to backend ---
+  try {
+    const response = await fetch("http://localhost:5000/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: input }),
+    });
+    const data = await response.json();
+
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: input, fileName: file?.name }
+      { role: "assistant", content: data.response }
     ]);
-    // Reset input and file
-    setInput("");
-    setFile(null);
-
-    // --- Send to backend ---
-    // Here you would use FormData to send message/file to your backend API
-    // Skipping actual API call for now, but you can plug it in!
-
-    // Simulate AI response:
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "This is a placeholder response." }
-      ]);
-    }, 700);
-  };
+  } catch (error) {
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Error talking to backend." }
+    ]);
+  }
+};
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "#f3f5fa" }}>

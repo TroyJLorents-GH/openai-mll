@@ -1,6 +1,11 @@
 # app.py
 from flask import Flask, request, jsonify
 from chat_service import handle_chat
+from flask_cors import CORS
+
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  
 
 print("START OF APP.PY")
 

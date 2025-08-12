@@ -13,9 +13,22 @@ class OpenAIClient:
         self.client = openai.Client(api_key=self.api_key)
 
     def chat_completion(self, prompt, model="gpt-4o"):
+        system_message = """You are a helpful AI assistant. Please provide clear, well-structured responses that are:
+- Conversational and friendly
+- Concise but informative
+- Well-formatted with proper paragraphs
+- Helpful and actionable when possible
+
+If the user asks a question, provide a direct answer. If they're making conversation, respond naturally and engagingly."""
+        
         response = self.client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=500
         )
         return response.choices[0].message.content.strip()
 

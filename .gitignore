@@ -18,6 +18,7 @@ frontend/build/
 # ===== BACKEND (Python) =====
 /backend/__pycache__/
 /backend/.venv/
+/backend/venv/
 /backend/env/
 /backend/.env
 /backend/*.pyc
@@ -27,6 +28,7 @@ frontend/build/
 backend/.pytest_cache/
 backend/.DS_Store
 backend/.venv/
+backend/venv/
 backend/__pycache__/
 backend/.env
 

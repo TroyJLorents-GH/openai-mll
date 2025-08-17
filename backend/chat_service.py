@@ -6,13 +6,13 @@ from db_manager import log_chat, log_flagged
 
 
 
-def handle_chat(prompt):
+def handle_chat(prompt, model="gpt-4o"):
     client = OpenAIClient()
     flagged, categories = client.moderate_content(prompt)
 
     if flagged:
         log_flagged(prompt, categories)
-        return "I apologize, but I cannot respond to that type of content. Please try asking something else!"
+        return "I apologize, but I cannot respond to that type of content!"
 
     # Add context based on the type of question
     enhanced_prompt = prompt

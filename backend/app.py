@@ -12,11 +12,12 @@ print("START OF APP.PY")
 def chat():
     data = request.get_json()
     prompt = data.get("message")
+    model = data.get("model", "gpt-4o") 
 
     if not prompt:
         return jsonify({"error": "No message provided."}), 400
 
-    response = handle_chat(prompt)
+    response = handle_chat(prompt, model)
     return jsonify({"response": response})
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ export default function ChatPage() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [model, setModel] = useState("gpt-4o");
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,7 +80,7 @@ export default function ChatPage() {
     const response = await fetch("http://localhost:5001/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input }),
+      body: JSON.stringify({ message: input, model }),
     });
     const data = await response.json();
 
@@ -281,6 +282,19 @@ export default function ChatPage() {
             ref={fileInputRef}
             onChange={e => setFile(e.target.files[0])}
           />
+
+          {/* 🔽 Model selector */}
+          <select 
+            value={model} 
+            onChange={(e) => setModel(e.target.value)} 
+            style={{ marginRight: "10px", padding: "0.5rem", borderRadius: "6px", border: "1px solid #c9d3ea" }}
+          >
+            <option value="gpt-4o">GPT-4o</option>
+            <option value="gpt-4o-mini">GPT-4o Mini</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option Value="gpt-5">GPT-5 (if available)</option>
+          </select>
+
           <input
             type="text"
             placeholder={

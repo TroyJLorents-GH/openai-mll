@@ -76,31 +76,39 @@ def delete_document(document_id):
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
-    prompt = data.get("message")
-    model = data.get("model", "gpt-4o")
-    mode = data.get("mode", "general")
-    document_ids = data.get("document_ids", [])  # List of document IDs to include
+    try:
+        data = request.get_json()
+        prompt = data.get("message")
+        model = data.get("model", "gpt-4o")
+        mode = data.get("mode", "general")
+        document_ids = data.get("document_ids", [])  # List of document IDs to include
 
-    if not prompt:
-        return jsonify({"error": "No message provided."}), 400
+        if not prompt:
+            return jsonify({"error": "No message provided."}), 400
 
-    # Get document content if document IDs are provided
-    document_context = ""
-    if document_ids:
-        for doc_id in document_ids:
-            content = file_uploader.get_document_content(doc_id)
-            if content:
-                document_context += f"\n\nDocument content:\n{content}\n"
+        # Basic logging for debugging
+        print(f"/chat called model={model} mode={mode} doc_ids={len(document_ids)}")
 
-    # Include document context in the prompt if available
-    if document_context:
-        enhanced_prompt = f"Context from uploaded documents:{document_context}\n\nUser question: {prompt}"
-    else:
-        enhanced_prompt = prompt
+        # Get document content if document IDs are provided
+        document_context = ""
+        if document_ids:
+            for doc_id in document_ids:
+                content = file_uploader.get_document_content(doc_id)
+                if content:
+                    document_context += f"\n\nDocument content:\n{content}\n"
 
-    response = handle_chat(enhanced_prompt, model, mode)
-    return jsonify({"response": response})
+        # Include document context in the prompt if available
+        if document_context:
+            enhanced_prompt = f"Context from uploaded documents:{document_context}\n\nUser question: {prompt}"
+        else:
+            enhanced_prompt = prompt
+
+        response = handle_chat(enhanced_prompt, model, mode)
+        return jsonify({"response": response})
+    except Exception as e:
+        # Return JSON error so the frontend sees a reason
+        print(f"/chat error: {e}")
+        return jsonify({"error": "Chat failed", "detail": str(e)}), 500
 
 if __name__ == "__main__":
     print("ABOUT TO RUN FLASK")

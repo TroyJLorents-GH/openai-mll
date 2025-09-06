@@ -12,6 +12,31 @@ class OpenAIClient:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.client = openai.Client(api_key=self.api_key)
 
+    def _normalize_model(self, model: str) -> str:
+        """Map aliases/unknown models to supported defaults."""
+        default_model = "gpt-4o"
+        if not model:
+            return default_model
+        m = model.strip()
+        # Known supported chat-completions models
+        supported = {
+            "gpt-4o",
+            "gpt-4o-mini",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-3.5-turbo",
+        }
+        if m in supported:
+            return m
+        # Common aliases or placeholders
+        aliases = {
+            "gpt5": "gpt-4o",
+            "gpt-5": "gpt-4o",
+            "gpt-5-mini": "gpt-4o-mini",
+            "gpt-4.1-turbo": "gpt-4.1",
+        }
+        return aliases.get(m.lower(), default_model)
+
     def chat_completion(self, prompt, model="gpt-4o", mode="general"):
         # Check if this is a document-based query
         is_document_query = "Context from uploaded documents:" in prompt
@@ -67,15 +92,35 @@ Guidelines:
                 max_tokens = 700
                 temperature = 0.3
         
-        response = self.client.chat.completions.create(
-            model=model,
-            messages=[
+        # Normalize/alias unknown model names (e.g., "gpt-5")
+        model = self._normalize_model(model)
+
+        # Some newer models (e.g., gpt-4o family) require 'max_completion_tokens' instead of 'max_tokens'.
+        def uses_max_completion_tokens(m: str) -> bool:
+            m = (m or "").lower()
+            prefixes = (
+                "gpt-4o",
+                "gpt-4.1",
+                "o3",
+                "o4",
+            )
+            return any(m.startswith(p) for p in prefixes)
+
+        create_kwargs = {
+            "model": model,
+            "messages": [
                 {"role": "system", "content": system_message},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
-            temperature=temperature,
-            max_tokens=max_tokens
-        )
+            "temperature": temperature,
+        }
+
+        if uses_max_completion_tokens(model):
+            create_kwargs["max_completion_tokens"] = max_tokens
+        else:
+            create_kwargs["max_tokens"] = max_tokens
+
+        response = self.client.chat.completions.create(**create_kwargs)
         return response.choices[0].message.content.strip()
 
     def moderate_content(self, prompt):

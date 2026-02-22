@@ -1,9 +1,12 @@
 # app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from chat_service import handle_chat
 from file_uploader import FileUploader
 from flask_cors import CORS
 import os
+import requests
+
+VM_API_BASE = "http://52.233.82.247:5000"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})  
@@ -109,6 +112,71 @@ def chat():
         # Return JSON error so the frontend sees a reason
         print(f"/chat error: {e}")
         return jsonify({"error": "Chat failed", "detail": str(e)}), 500
+
+# ── VM API proxy routes ──────────────────────────────────────────────
+
+@app.route("/vm/analyze", methods=["POST"])
+def vm_analyze():
+    """Proxy resume upload to VM API for Doc Intelligence analysis."""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        file = request.files['file']
+        resp = requests.post(
+            f"{VM_API_BASE}/analyze",
+            files={"file": (file.filename, file.read(), file.content_type)},
+            timeout=120,
+        )
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get("Content-Type", "application/json"))
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "VM API is unreachable"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/vm/match-job", methods=["POST"])
+def vm_match_job():
+    """Proxy job-description matching to VM API."""
+    try:
+        resp = requests.post(
+            f"{VM_API_BASE}/match-job",
+            json=request.get_json(),
+            timeout=120,
+        )
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get("Content-Type", "application/json"))
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "VM API is unreachable"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/vm/documents", methods=["GET"])
+def vm_documents():
+    """Proxy resume list from Cosmos DB via VM API."""
+    try:
+        resp = requests.get(f"{VM_API_BASE}/documents", timeout=30)
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get("Content-Type", "application/json"))
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "VM API is unreachable"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/vm/documents/<document_id>", methods=["DELETE"])
+def vm_delete_document(document_id):
+    """Proxy resume deletion to VM API."""
+    try:
+        resp = requests.delete(f"{VM_API_BASE}/documents/{document_id}", timeout=30)
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get("Content-Type", "application/json"))
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "VM API is unreachable"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     print("ABOUT TO RUN FLASK")

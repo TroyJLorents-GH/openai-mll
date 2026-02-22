@@ -32,6 +32,10 @@ backend/venv/
 backend/__pycache__/
 backend/.env
 
+# ===== UPLOADS & DATA =====
+backend/uploads/
+backend/documents.json
+
 # ===== GENERAL =====
 db/
 data/

@@ -14,7 +14,7 @@ class OpenAIClient:
 
     def _normalize_model(self, model: str) -> str:
         """Map aliases/unknown models to supported defaults."""
-        default_model = "gpt-4o"
+        default_model = "gpt-5"
         if not model:
             return default_model
         m = model.strip()
@@ -22,16 +22,17 @@ class OpenAIClient:
         supported = {
             "gpt-4o",
             "gpt-4o-mini",
-            "gpt-4.1",
+            "gpt-5",
             "gpt-4.1-mini",
             "gpt-3.5-turbo",
+            "gpt-4.1",
         }
         if m in supported:
             return m
         # Common aliases or placeholders
         aliases = {
-            "gpt5": "gpt-4o",
-            "gpt-5": "gpt-4o",
+            "gpt5": "gpt-5",
+            "gpt-5": "gpt-5",
             "gpt-5-mini": "gpt-4o-mini",
             "gpt-4.1-turbo": "gpt-4.1",
         }

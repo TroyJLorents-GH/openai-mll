@@ -495,16 +495,21 @@ export default function ChatPage() {
           />
 
           {/* 🔽 Model selector */}
-          <select 
-            value={model} 
-            onChange={(e) => setModel(e.target.value)} 
-            style={{ marginRight: "10px", padding: "0.5rem", borderRadius: "6px", border: "1px solid #c9d3ea" }}
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            style={{ marginRight: "10px", padding: "0.5rem", borderRadius: "6px", border: model === "PersonalAssistant" ? "2px solid #8b5cf6" : "1px solid #c9d3ea", backgroundColor: model === "PersonalAssistant" ? "#f5f3ff" : "#fff" }}
           >
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option Value="gpt-5">GPT-5</option>
+            <optgroup label="Foundry Agents">
+              <option value="PersonalAssistant">PersonalAssistant (Cosmos DB, Web Search)</option>
+            </optgroup>
+            <optgroup label="Direct Models">
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini">GPT-4o Mini</option>
+              <option value="gpt-4-turbo">GPT-4 Turbo</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-5">GPT-5</option>
+            </optgroup>
           </select>
 
           {/* 🔽 Assistant mode selector */}

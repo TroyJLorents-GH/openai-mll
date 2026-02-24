@@ -12,7 +12,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 
-const API = "http://localhost:5001";
+const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
 export default function ChatTab() {
   const [messages, setMessages] = useState([]);

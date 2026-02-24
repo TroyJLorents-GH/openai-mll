@@ -8,7 +8,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import WorkIcon from "@mui/icons-material/Work";
 
-const API = "http://localhost:5001";
+const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
 export default function MatchTab({ vmResumes, refreshVmResumes }) {
   const [jobDescription, setJobDescription] = useState("");

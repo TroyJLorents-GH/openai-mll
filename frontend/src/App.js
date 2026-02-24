@@ -3,7 +3,7 @@ import { Box, Tabs, Tab, Typography } from "@mui/material";
 import MatchTab from "./pages/MatchTab";
 import ChatTab from "./pages/ChatTab";
 
-const API = "http://localhost:5001";
+const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
 export default function App() {
   const [tab, setTab] = useState(0);

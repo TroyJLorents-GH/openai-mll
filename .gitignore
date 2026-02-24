@@ -32,6 +32,9 @@ backend/venv/
 backend/__pycache__/
 backend/.env
 
+# ===== NETLIFY FUNCTIONS =====
+netlify/functions/node_modules/
+
 # ===== UPLOADS & DATA =====
 backend/uploads/
 backend/documents.json

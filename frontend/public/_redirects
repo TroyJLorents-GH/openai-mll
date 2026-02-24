@@ -1,0 +1,6 @@
+/api/vm/analyze /.netlify/functions/vm-analyze 200!
+/api/vm/match-job /.netlify/functions/vm-match-job 200!
+/api/vm/documents/* /.netlify/functions/vm-documents/:splat 200!
+/api/vm/documents /.netlify/functions/vm-documents 200!
+/api/chat /.netlify/functions/chat 200!
+/* /index.html 200

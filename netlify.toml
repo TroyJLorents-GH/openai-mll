@@ -6,6 +6,7 @@
 
 [functions]
   node_bundler = "esbuild"
+  included_files = ["../netlify/functions/**"]
 
 [[plugins]]
   package = "@netlify/plugin-functions-install-core"
@@ -15,26 +16,31 @@
   from = "/api/vm/analyze"
   to = "/.netlify/functions/vm-analyze"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/api/vm/match-job"
   to = "/.netlify/functions/vm-match-job"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/vm/documents/*"
+  to = "/.netlify/functions/vm-documents/:splat"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/api/vm/documents"
   to = "/.netlify/functions/vm-documents"
   status = 200
-
-[[redirects]]
-  from = "/api/vm/documents/:id"
-  to = "/.netlify/functions/vm-documents/:id"
-  status = 200
+  force = true
 
 [[redirects]]
   from = "/api/chat"
   to = "/.netlify/functions/chat"
   status = 200
+  force = true
 
 # SPA fallback — must be last
 [[redirects]]

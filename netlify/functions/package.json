@@ -1,5 +1,4 @@
 {
-  "type": "module",
   "dependencies": {
     "openai": "^4.0.0",
     "@azure/identity": "^4.13.0"

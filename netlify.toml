@@ -7,6 +7,9 @@
 [functions]
   node_bundler = "esbuild"
 
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 # API redirects → Netlify Functions
 [[redirects]]
   from = "/api/vm/analyze"

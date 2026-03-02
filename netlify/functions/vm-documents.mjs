@@ -11,12 +11,24 @@ export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers, body: "" };
 
   try {
-    // Extract document ID from path if present
-    const pathParts = event.path.replace("/.netlify/functions/vm-documents", "").split("/").filter(Boolean);
-    const documentId = pathParts[0] || null;
+    // Extract document ID from path — try both rewritten and original paths
+    const rawPath = event.rawUrl || event.path || "";
+    let documentId = null;
+
+    // Match UUID pattern in the path
+    const uuidMatch = rawPath.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+    if (uuidMatch) {
+      documentId = uuidMatch[1];
+    }
 
     if (event.httpMethod === "DELETE" && documentId) {
       const resp = await fetch(`${VM_API}/documents/${documentId}`, { method: "DELETE" });
+      const data = await resp.text();
+      return { statusCode: resp.status, headers, body: data };
+    }
+
+    if (event.httpMethod === "GET" && documentId) {
+      const resp = await fetch(`${VM_API}/documents/${documentId}`);
       const data = await resp.text();
       return { statusCode: resp.status, headers, body: data };
     }

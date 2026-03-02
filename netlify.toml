@@ -37,6 +37,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/tailor-resume"
+  to = "/.netlify/functions/tailor-resume"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/chat"
   to = "/.netlify/functions/chat"
   status = 200

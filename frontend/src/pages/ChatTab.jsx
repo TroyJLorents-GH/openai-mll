@@ -168,7 +168,7 @@ export default function ChatTab() {
     strong: ({ children, ...p }) => <Box component="strong" sx={{ fontWeight: "bold" }} {...p}>{children}</Box>,
     em: ({ children, ...p }) => <Box component="em" sx={{ fontStyle: "italic" }} {...p}>{children}</Box>,
     code: ({ children, ...p }) => (
-      <Box component="code" sx={{ bgcolor: "rgba(255,255,255,0.08)", px: 0.5, py: 0.2, borderRadius: 0.5, fontSize: "0.9em" }} {...p}>
+      <Box component="code" sx={{ bgcolor: "rgba(0,0,0,0.06)", px: 0.5, py: 0.2, borderRadius: 0.5, fontSize: "0.9em" }} {...p}>
         {children}
       </Box>
     ),
@@ -259,7 +259,7 @@ export default function ChatTab() {
                       cursor: "pointer",
                       border: 1,
                       borderColor: selectedDocuments.includes(doc.id) ? "primary.main" : "divider",
-                      bgcolor: selectedDocuments.includes(doc.id) ? "rgba(99,102,241,0.1)" : "transparent",
+                      bgcolor: selectedDocuments.includes(doc.id) ? "action.selected" : "transparent",
                     }}
                     secondaryAction={
                       <IconButton
@@ -289,7 +289,7 @@ export default function ChatTab() {
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Selected docs banner */}
         {selectedDocuments.length > 0 && (
-          <Box sx={{ px: 2, py: 1, bgcolor: "rgba(99,102,241,0.1)", borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+          <Box sx={{ px: 2, py: 1, bgcolor: "primary.50", borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
             <Typography variant="body2" sx={{ fontWeight: 500 }}>Using:</Typography>
             {selectedDocuments.map((docId) => {
               const doc = documents.find((d) => d.id === docId);
@@ -319,7 +319,7 @@ export default function ChatTab() {
                   py: 1.2,
                   maxWidth: msg.role === "assistant" ? 800 : 420,
                   minWidth: 200,
-                  bgcolor: msg.role === "user" ? "primary.main" : "background.paper",
+                  bgcolor: msg.role === "user" ? "primary.main" : "grey.100",
                   color: msg.role === "user" ? "primary.contrastText" : "text.primary",
                   borderRadius: 2,
                 }}

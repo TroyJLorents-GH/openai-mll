@@ -2,11 +2,16 @@ import React, { useState, useRef } from "react";
 import {
   Box, Typography, Button, TextField, Paper, Chip, Alert, IconButton,
   LinearProgress, List, ListItem, ListItemText, ListItemSecondaryAction,
-  CircularProgress,
+  CircularProgress, Collapse,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import WorkIcon from "@mui/icons-material/Work";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
@@ -16,6 +21,9 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
   const [uploading, setUploading] = useState(false);
   const [matching, setMatching] = useState(false);
   const [error, setError] = useState("");
+  const [tailoring, setTailoring] = useState({}); // { [documentId]: true }
+  const [tailorResults, setTailorResults] = useState({}); // { [documentId]: "suggestions..." }
+  const [tailorExpanded, setTailorExpanded] = useState({}); // { [documentId]: true }
   const fileInputRef = useRef(null);
 
   const handleUpload = async (e) => {
@@ -72,6 +80,41 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
       setError(err.message);
     } finally {
       setMatching(false);
+    }
+  };
+
+  const handleTailor = async (result) => {
+    const docId = result.documentId;
+    setTailoring((prev) => ({ ...prev, [docId]: true }));
+    setError("");
+    try {
+      // Fetch full resume text from VM API
+      const docResp = await fetch(`${API}/vm/documents/${docId}`);
+      const docData = await docResp.json();
+      if (!docResp.ok) throw new Error(docData.error || "Failed to fetch resume");
+      const resumeText = docData.fullText || docData.extractedText || "";
+      if (!resumeText) throw new Error("No resume text found for this document");
+
+      // Send to ResumeAgent for tailoring
+      const resp = await fetch(`${API}/tailor-resume`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resumeText,
+          jobDescription,
+          matchedSkills: result.matchedSkills || [],
+          missingSkills: result.missingSkills || [],
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || "Tailoring failed");
+
+      setTailorResults((prev) => ({ ...prev, [docId]: data.suggestions }));
+      setTailorExpanded((prev) => ({ ...prev, [docId]: true }));
+    } catch (err) {
+      setError(`Tailor error: ${err.message}`);
+    } finally {
+      setTailoring((prev) => ({ ...prev, [docId]: false }));
     }
   };
 
@@ -243,6 +286,62 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
                       </Box>
                     </Box>
                   )}
+
+                  {/* Tailor Resume button */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="small"
+                      startIcon={
+                        tailoring[result.documentId]
+                          ? <CircularProgress size={16} color="inherit" />
+                          : <AutoFixHighIcon />
+                      }
+                      onClick={() => handleTailor(result)}
+                      disabled={!!tailoring[result.documentId]}
+                    >
+                      {tailoring[result.documentId] ? "Tailoring..." : "Tailor Resume"}
+                    </Button>
+                    {tailorResults[result.documentId] && (
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setTailorExpanded((prev) => ({
+                            ...prev,
+                            [result.documentId]: !prev[result.documentId],
+                          }))
+                        }
+                      >
+                        {tailorExpanded[result.documentId] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </IconButton>
+                    )}
+                  </Box>
+
+                  {/* Tailor results */}
+                  <Collapse in={!!tailorExpanded[result.documentId]}>
+                    {tailorResults[result.documentId] && (
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          mt: 2,
+                          p: 2,
+                          bgcolor: "background.default",
+                          "& h1, & h2, & h3, & h4": { color: "secondary.main", mt: 1, mb: 0.5 },
+                          "& ul, & ol": { pl: 2 },
+                          "& li": { mb: 0.5 },
+                          "& strong": { color: "primary.main" },
+                        }}
+                      >
+                        <Typography variant="subtitle2" color="secondary" sx={{ mb: 1, fontWeight: 700 }}>
+                          ResumeAgent Suggestions
+                        </Typography>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {tailorResults[result.documentId]}
+                        </ReactMarkdown>
+                      </Paper>
+                    )}
+                  </Collapse>
                 </Paper>
               ))}
             </Box>

@@ -6,10 +6,10 @@ import { ThemeProvider, CssBaseline, createTheme } from '@mui/material';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
-    primary: { main: '#6366f1' },
-    secondary: { main: '#22d3ee' },
-    background: { default: '#0f172a', paper: '#1e293b' },
+    mode: 'light',
+    primary: { main: '#4f46e5' },
+    secondary: { main: '#0891b2' },
+    background: { default: '#f8fafc', paper: '#ffffff' },
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',

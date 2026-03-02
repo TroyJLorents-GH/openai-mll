@@ -165,6 +165,19 @@ def vm_documents():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/vm/documents/<document_id>", methods=["GET"])
+def vm_get_document(document_id):
+    """Proxy single document fetch from VM API (includes fullText)."""
+    try:
+        resp = requests.get(f"{VM_API_BASE}/documents/{document_id}", timeout=30)
+        return Response(resp.content, status=resp.status_code,
+                        content_type=resp.headers.get("Content-Type", "application/json"))
+    except requests.exceptions.ConnectionError:
+        return jsonify({"error": "VM API is unreachable"}), 502
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/vm/documents/<document_id>", methods=["DELETE"])
 def vm_delete_document(document_id):
     """Proxy resume deletion to VM API."""
@@ -175,6 +188,41 @@ def vm_delete_document(document_id):
     except requests.exceptions.ConnectionError:
         return jsonify({"error": "VM API is unreachable"}), 502
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── ResumeAgent tailor route ─────────────────────────────────────────
+
+_resume_agent = None
+
+def _get_resume_agent():
+    global _resume_agent
+    if _resume_agent is None:
+        from foundry_client import ResumeAgentClient
+        _resume_agent = ResumeAgentClient()
+    return _resume_agent
+
+
+@app.route("/tailor-resume", methods=["POST"])
+def tailor_resume():
+    """Send resume + job gaps to ResumeAgent for tailoring suggestions."""
+    try:
+        data = request.get_json()
+        resume_text = data.get("resumeText", "")
+        job_description = data.get("jobDescription", "")
+        matched_skills = data.get("matchedSkills", [])
+        missing_skills = data.get("missingSkills", [])
+
+        if not resume_text or not job_description:
+            return jsonify({"error": "resumeText and jobDescription are required"}), 400
+
+        agent = _get_resume_agent()
+        suggestions = agent.tailor_resume(
+            resume_text, job_description, matched_skills, missing_skills
+        )
+        return jsonify({"suggestions": suggestions})
+    except Exception as e:
+        print(f"/tailor-resume error: {e}")
         return jsonify({"error": str(e)}), 500
 
 

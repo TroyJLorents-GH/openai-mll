@@ -10,6 +10,7 @@ import WorkIcon from "@mui/icons-material/Work";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -24,6 +25,7 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
   const [tailoring, setTailoring] = useState({}); // { [documentId]: true }
   const [tailorResults, setTailorResults] = useState({}); // { [documentId]: "suggestions..." }
   const [tailorExpanded, setTailorExpanded] = useState({}); // { [documentId]: true }
+  const [detailsExpanded, setDetailsExpanded] = useState({}); // { [documentId]: true }
   const fileInputRef = useRef(null);
 
   const handleUpload = async (e) => {
@@ -286,6 +288,71 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
                       </Box>
                     </Box>
                   )}
+
+                  {/* Score Breakdown toggle */}
+                  <Box sx={{ mt: 1.5, mb: 1 }}>
+                    <Button
+                      size="small"
+                      variant="text"
+                      startIcon={<InfoOutlinedIcon />}
+                      endIcon={detailsExpanded[result.documentId] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      onClick={() =>
+                        setDetailsExpanded((prev) => ({
+                          ...prev,
+                          [result.documentId]: !prev[result.documentId],
+                        }))
+                      }
+                      sx={{ textTransform: "none", color: "text.secondary" }}
+                    >
+                      Score Breakdown
+                    </Button>
+                    <Collapse in={!!detailsExpanded[result.documentId]}>
+                      <Paper variant="outlined" sx={{ mt: 1, p: 2, bgcolor: "grey.50" }}>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2, mb: 2 }}>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">AI Search Score (RRF)</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                              {result.searchScore ?? "N/A"}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Hybrid BM25 + Vector
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Confidence</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: result.confidence >= 75 ? "success.main" : result.confidence >= 50 ? "warning.main" : "error.main" }}>
+                              {result.confidence}%
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              Normalized from RRF
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="caption" color="text.secondary">Skill Match</Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 700, color: result.skillMatchPercent >= 75 ? "success.main" : result.skillMatchPercent >= 50 ? "warning.main" : "error.main" }}>
+                              {result.skillMatchPercent}%
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {result.matchedSkills?.length || 0}/{(result.matchedSkills?.length || 0) + (result.missingSkills?.length || 0)} requirements
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {result.resumeKeyPhrases?.length > 0 && (
+                          <Box>
+                            <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+                              Resume Key Phrases ({result.resumeKeyPhrases.length})
+                            </Typography>
+                            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                              {result.resumeKeyPhrases.map((phrase, i) => (
+                                <Chip key={i} label={phrase} size="small" variant="outlined" sx={{ fontSize: "0.75rem" }} />
+                              ))}
+                            </Box>
+                          </Box>
+                        )}
+                      </Paper>
+                    </Collapse>
+                  </Box>
 
                   {/* Tailor Resume button */}
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>

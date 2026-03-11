@@ -13,6 +13,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { apiFetch } from "../api";
 
 const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
@@ -37,14 +38,14 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
       // Upload to VM API for Doc Intelligence analysis
       const form = new FormData();
       form.append("file", file);
-      const resp = await fetch(`${API}/vm/analyze`, { method: "POST", body: form });
+      const resp = await apiFetch(`${API}/vm/analyze`, { method: "POST", body: form });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || "Analysis failed");
 
       // Also upload to local backend for chat context
       const localForm = new FormData();
       localForm.append("file", file);
-      await fetch(`${API}/upload`, { method: "POST", body: localForm });
+      await apiFetch(`${API}/upload`, { method: "POST", body: localForm });
 
       await refreshVmResumes();
     } catch (err) {
@@ -57,7 +58,7 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
 
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API}/vm/documents/${id}`, { method: "DELETE" });
+      await apiFetch(`${API}/vm/documents/${id}`, { method: "DELETE" });
       await refreshVmResumes();
     } catch (err) {
       setError(err.message);
@@ -70,7 +71,7 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
     setError("");
     setMatchResults(null);
     try {
-      const resp = await fetch(`${API}/vm/match-job`, {
+      const resp = await apiFetch(`${API}/vm/match-job`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobDescription }),
@@ -91,14 +92,14 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
     setError("");
     try {
       // Fetch full resume text from VM API
-      const docResp = await fetch(`${API}/vm/documents/${docId}`);
+      const docResp = await apiFetch(`${API}/vm/documents/${docId}`);
       const docData = await docResp.json();
       if (!docResp.ok) throw new Error(docData.error || "Failed to fetch resume");
       const resumeText = docData.fullText || docData.extractedText || "";
       if (!resumeText) throw new Error("No resume text found for this document");
 
       // Send to ResumeAgent for tailoring
-      const resp = await fetch(`${API}/tailor-resume`, {
+      const resp = await apiFetch(`${API}/tailor-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -11,6 +11,7 @@ import SendIcon from "@mui/icons-material/Send";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import { apiFetch } from "../api";
 
 const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
@@ -36,7 +37,7 @@ export default function ChatTab() {
 
   const loadDocuments = async () => {
     try {
-      const response = await fetch(`${API}/documents`);
+      const response = await apiFetch(`${API}/documents`);
       const data = await response.json();
       if (data.documents) setDocuments(data.documents);
     } catch (error) {
@@ -49,7 +50,7 @@ export default function ChatTab() {
     try {
       const formData = new FormData();
       formData.append("file", fileToUpload);
-      const response = await fetch(`${API}/upload`, { method: "POST", body: formData });
+      const response = await apiFetch(`${API}/upload`, { method: "POST", body: formData });
       const data = await response.json();
       if (data.success) {
         await loadDocuments();
@@ -129,7 +130,7 @@ export default function ChatTab() {
     setInput("");
     setFile(null);
     try {
-      const response = await fetch(`${API}/chat`, {
+      const response = await apiFetch(`${API}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: currentInput, model, mode, document_ids: selectedDocuments }),
@@ -145,7 +146,7 @@ export default function ChatTab() {
 
   const deleteDocument = async (documentId) => {
     try {
-      const response = await fetch(`${API}/documents/${documentId}`, { method: "DELETE" });
+      const response = await apiFetch(`${API}/documents/${documentId}`, { method: "DELETE" });
       if (response.ok) {
         await loadDocuments();
         setSelectedDocuments((prev) => prev.filter((id) => id !== documentId));

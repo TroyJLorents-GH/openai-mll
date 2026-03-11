@@ -1,17 +1,27 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Tabs, Tab, Typography } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Button, Avatar, CircularProgress } from "@mui/material";
+import GoogleIcon from "@mui/icons-material/Google";
+import LogoutIcon from "@mui/icons-material/Logout";
 import MatchTab from "./pages/MatchTab";
 import ChatTab from "./pages/ChatTab";
+import { useAuth } from "./AuthContext";
+import { apiFetch, setTokenProvider } from "./api";
 
 const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
 
 export default function App() {
   const [tab, setTab] = useState(0);
   const [vmResumes, setVmResumes] = useState([]);
+  const { user, loading, login, logout, getToken } = useAuth();
+
+  // Wire up apiFetch with the token provider
+  useEffect(() => {
+    setTokenProvider(getToken);
+  }, [getToken]);
 
   const refreshVmResumes = useCallback(async () => {
     try {
-      const resp = await fetch(`${API}/vm/documents`);
+      const resp = await apiFetch(`${API}/vm/documents`);
       const data = await resp.json();
       const docs = Array.isArray(data.documents) ? data.documents : Array.isArray(data) ? data : [];
       setVmResumes(docs);
@@ -20,7 +30,51 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => { refreshVmResumes(); }, [refreshVmResumes]);
+  useEffect(() => {
+    if (user) refreshVmResumes();
+  }, [user, refreshVmResumes]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Login gate
+  if (!user) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          gap: 3,
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+          Resume Match{" "}
+          <Box component="span" sx={{ color: "primary.main" }}>AI</Box>
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Sign in to manage your resumes and match them to jobs.
+        </Typography>
+        <Button
+          variant="contained"
+          size="large"
+          startIcon={<GoogleIcon />}
+          onClick={login}
+          sx={{ textTransform: "none", px: 4, py: 1.5 }}
+        >
+          Sign in with Google
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
@@ -42,10 +96,26 @@ export default function App() {
           <Box component="span" sx={{ color: "primary.main" }}>AI</Box>
         </Typography>
 
-        <Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
-          <Tab label="Match" />
-          <Tab label="Chat" />
-        </Tabs>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
+            <Tab label="Match" />
+            <Tab label="Chat" />
+          </Tabs>
+
+          <Avatar
+            src={user.photoURL}
+            alt={user.displayName}
+            sx={{ width: 32, height: 32 }}
+          />
+          <Button
+            size="small"
+            startIcon={<LogoutIcon />}
+            onClick={logout}
+            sx={{ textTransform: "none" }}
+          >
+            Logout
+          </Button>
+        </Box>
       </Box>
 
       {/* Tab content */}

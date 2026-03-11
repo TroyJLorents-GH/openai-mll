@@ -9,9 +9,46 @@ import requests
 VM_API_BASE = "http://52.233.82.247:5000"
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 print("START OF APP.PY")
+
+# Firebase Admin SDK for token verification
+_firebase_initialized = False
+
+def _init_firebase():
+    global _firebase_initialized
+    if _firebase_initialized:
+        return
+    try:
+        import firebase_admin
+        from firebase_admin import credentials
+        cred = credentials.Certificate({
+            "type": "service_account",
+            "project_id": os.getenv("FIREBASE_PROJECT_ID", ""),
+            "client_email": os.getenv("FIREBASE_CLIENT_EMAIL", ""),
+            "private_key": os.getenv("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n"),
+            "token_uri": "https://oauth2.googleapis.com/token",
+        })
+        firebase_admin.initialize_app(cred)
+        _firebase_initialized = True
+    except Exception as e:
+        print(f"Firebase init skipped: {e}")
+
+def get_user_id():
+    """Extract userId from Firebase ID token. Falls back to 'user1' for local dev."""
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return "user1"
+    token = auth_header[7:]
+    try:
+        _init_firebase()
+        from firebase_admin import auth
+        decoded = auth.verify_id_token(token)
+        return decoded["uid"]
+    except Exception as e:
+        print(f"Token verification failed, using fallback: {e}")
+        return "user1"
 
 # Initialize file uploader
 file_uploader = FileUploader()
@@ -122,9 +159,11 @@ def vm_analyze():
         if 'file' not in request.files:
             return jsonify({"error": "No file provided"}), 400
         file = request.files['file']
+        user_id = get_user_id()
         resp = requests.post(
             f"{VM_API_BASE}/analyze",
             files={"file": (file.filename, file.read(), file.content_type)},
+            headers={"X-User-Id": user_id},
             timeout=120,
         )
         return Response(resp.content, status=resp.status_code,
@@ -139,9 +178,12 @@ def vm_analyze():
 def vm_match_job():
     """Proxy job-description matching to VM API."""
     try:
+        user_id = get_user_id()
+        body = request.get_json() or {}
+        body["userId"] = user_id
         resp = requests.post(
             f"{VM_API_BASE}/match-job",
-            json=request.get_json(),
+            json=body,
             timeout=120,
         )
         return Response(resp.content, status=resp.status_code,
@@ -156,7 +198,8 @@ def vm_match_job():
 def vm_documents():
     """Proxy resume list from Cosmos DB via VM API."""
     try:
-        resp = requests.get(f"{VM_API_BASE}/documents", timeout=30)
+        user_id = get_user_id()
+        resp = requests.get(f"{VM_API_BASE}/documents?userId={user_id}", timeout=30)
         return Response(resp.content, status=resp.status_code,
                         content_type=resp.headers.get("Content-Type", "application/json"))
     except requests.exceptions.ConnectionError:
@@ -169,7 +212,8 @@ def vm_documents():
 def vm_get_document(document_id):
     """Proxy single document fetch from VM API (includes fullText)."""
     try:
-        resp = requests.get(f"{VM_API_BASE}/documents/{document_id}", timeout=30)
+        user_id = get_user_id()
+        resp = requests.get(f"{VM_API_BASE}/documents/{document_id}?userId={user_id}", timeout=30)
         return Response(resp.content, status=resp.status_code,
                         content_type=resp.headers.get("Content-Type", "application/json"))
     except requests.exceptions.ConnectionError:
@@ -182,7 +226,8 @@ def vm_get_document(document_id):
 def vm_delete_document(document_id):
     """Proxy resume deletion to VM API."""
     try:
-        resp = requests.delete(f"{VM_API_BASE}/documents/{document_id}", timeout=30)
+        user_id = get_user_id()
+        resp = requests.delete(f"{VM_API_BASE}/documents/{document_id}?userId={user_id}", timeout=30)
         return Response(resp.content, status=resp.status_code,
                         content_type=resp.headers.get("Content-Type", "application/json"))
     except requests.exceptions.ConnectionError:

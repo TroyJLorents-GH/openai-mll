@@ -1,8 +1,10 @@
+import { verifyToken } from "./auth.mjs";
+
 const VM_API = "http://52.233.82.247:5000";
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
 };
@@ -10,6 +12,9 @@ const headers = {
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers, body: "" };
   if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
+
+  const auth = await verifyToken(event);
+  if (auth.error) return { ...auth.error, headers };
 
   try {
     // Parse multipart form data to extract file
@@ -25,10 +30,13 @@ export const handler = async (event) => {
       ? Buffer.from(event.body, "base64")
       : Buffer.from(event.body);
 
-    // Forward the raw multipart data to the VM API
+    // Forward the raw multipart data to the VM API with userId header
     const resp = await fetch(`${VM_API}/analyze`, {
       method: "POST",
-      headers: { "Content-Type": contentType },
+      headers: {
+        "Content-Type": contentType,
+        "X-User-Id": auth.userId,
+      },
       body: bodyBuffer,
     });
     const data = await resp.text();

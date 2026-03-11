@@ -1,8 +1,8 @@
-const VM_API = "http://52.233.82.247:5000";
+import { verifyToken } from "./auth.mjs";
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Content-Type": "application/json",
 };
@@ -10,6 +10,9 @@ const headers = {
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") return { statusCode: 204, headers, body: "" };
   if (event.httpMethod !== "POST") return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
+
+  const auth = await verifyToken(event);
+  if (auth.error) return { ...auth.error, headers };
 
   try {
     const { resumeText, jobDescription, matchedSkills = [], missingSkills = [] } = JSON.parse(event.body || "{}");

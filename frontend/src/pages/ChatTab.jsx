@@ -5,12 +5,14 @@ import {
   Box, Paper, Typography, Button, TextField, Select, MenuItem, IconButton,
   List, ListItem, ListItemText, Chip, FormControl, InputLabel,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Drawer, useMediaQuery, useTheme,
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import SendIcon from "@mui/icons-material/Send";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import MenuIcon from "@mui/icons-material/Menu";
 import { apiFetch } from "../api";
 
 const API = process.env.NODE_ENV === "production" ? "/api" : "http://localhost:5001";
@@ -24,10 +26,13 @@ export default function ChatTab() {
   const [documents, setDocuments] = useState([]);
   const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const [model, setModel] = useState("gpt-4o");
   const [mode, setMode] = useState("general");
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,6 +111,7 @@ export default function ChatTab() {
   const loadChat = (chatId) => {
     const chat = chatHistory.find((c) => c.id === chatId);
     if (chat) { setMessages(chat.messages); setCurrentChatId(chat.id); }
+    if (isMobile) setDrawerOpen(false);
   };
 
   const handleFileSelect = async (e) => {
@@ -157,7 +163,6 @@ export default function ChatTab() {
     }
   };
 
-  // Markdown components for dark theme
   const mdComponents = {
     h1: ({ children, ...p }) => <Typography variant="h5" sx={{ my: 0.5, fontWeight: "bold" }} {...p}>{children}</Typography>,
     h2: ({ children, ...p }) => <Typography variant="h6" sx={{ my: 0.4, fontWeight: "bold" }} {...p}>{children}</Typography>,
@@ -185,109 +190,125 @@ export default function ChatTab() {
     td: ({ children }) => <TableCell sx={{ borderColor: "divider" }}>{children}</TableCell>,
   };
 
-  return (
-    <Box sx={{ display: "flex", height: "100%", overflow: "hidden" }}>
-      {/* Sidebar */}
-      <Paper
-        sx={{
-          width: 260,
-          borderRadius: 0,
-          borderRight: 1,
-          borderColor: "divider",
-          p: 2,
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>Chat History</Typography>
-          <IconButton color="primary" onClick={startNewChat} title="New Chat" size="small">
-            <AddIcon />
-          </IconButton>
-        </Box>
+  // Sidebar content (shared between permanent and drawer)
+  const sidebarContent = (
+    <Box sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>Chat History</Typography>
+        <IconButton color="primary" onClick={startNewChat} title="New Chat" size="small">
+          <AddIcon />
+        </IconButton>
+      </Box>
 
-        <Box sx={{ flex: 1, overflow: "auto" }}>
-          {chatHistory.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 4 }}>
-              No saved chats yet.
+      <Box sx={{ flex: 1, overflow: "auto" }}>
+        {chatHistory.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center", mt: 4 }}>
+            No saved chats yet.
+          </Typography>
+        ) : (
+          <List dense disablePadding>
+            {chatHistory.map((chat) => (
+              <ListItem
+                key={chat.id}
+                onClick={() => loadChat(chat.id)}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  cursor: "pointer",
+                  bgcolor: currentChatId === chat.id ? "action.selected" : "transparent",
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <ListItemText
+                  primary={chat.title}
+                  secondary={chat.timestamp}
+                  primaryTypographyProps={{ noWrap: true, fontSize: "0.9rem", fontWeight: 500 }}
+                  secondaryTypographyProps={{ fontSize: "0.75rem" }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Box>
+
+      {/* Documents */}
+      <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Documents</Typography>
+        <Box sx={{ maxHeight: 200, overflow: "auto" }}>
+          {documents.length === 0 ? (
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
+              No documents uploaded.
             </Typography>
           ) : (
             <List dense disablePadding>
-              {chatHistory.map((chat) => (
+              {documents.map((doc) => (
                 <ListItem
-                  key={chat.id}
-                  onClick={() => loadChat(chat.id)}
+                  key={doc.id}
+                  onClick={() => {
+                    if (selectedDocuments.includes(doc.id)) removeDocument(doc.id);
+                    else setSelectedDocuments((prev) => [...prev, doc.id]);
+                  }}
                   sx={{
                     borderRadius: 1,
                     mb: 0.5,
                     cursor: "pointer",
-                    bgcolor: currentChatId === chat.id ? "action.selected" : "transparent",
-                    "&:hover": { bgcolor: "action.hover" },
+                    border: 1,
+                    borderColor: selectedDocuments.includes(doc.id) ? "primary.main" : "divider",
+                    bgcolor: selectedDocuments.includes(doc.id) ? "action.selected" : "transparent",
                   }}
+                  secondaryAction={
+                    <IconButton
+                      edge="end"
+                      size="small"
+                      onClick={(e) => { e.stopPropagation(); deleteDocument(doc.id); }}
+                    >
+                      <DeleteIcon fontSize="small" color="error" />
+                    </IconButton>
+                  }
                 >
                   <ListItemText
-                    primary={chat.title}
-                    secondary={chat.timestamp}
-                    primaryTypographyProps={{ noWrap: true, fontSize: "0.9rem", fontWeight: 500 }}
-                    secondaryTypographyProps={{ fontSize: "0.75rem" }}
+                    primary={doc.filename}
+                    secondary={`${doc.content_length} chars`}
+                    primaryTypographyProps={{ fontSize: "0.8rem", fontWeight: 500 }}
+                    secondaryTypographyProps={{ fontSize: "0.7rem" }}
                   />
                 </ListItem>
               ))}
             </List>
           )}
         </Box>
+      </Box>
+    </Box>
+  );
 
-        {/* Documents */}
-        <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: "divider" }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>Documents</Typography>
-          <Box sx={{ maxHeight: 200, overflow: "auto" }}>
-            {documents.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: "center" }}>
-                No documents uploaded.
-              </Typography>
-            ) : (
-              <List dense disablePadding>
-                {documents.map((doc) => (
-                  <ListItem
-                    key={doc.id}
-                    onClick={() => {
-                      if (selectedDocuments.includes(doc.id)) removeDocument(doc.id);
-                      else setSelectedDocuments((prev) => [...prev, doc.id]);
-                    }}
-                    sx={{
-                      borderRadius: 1,
-                      mb: 0.5,
-                      cursor: "pointer",
-                      border: 1,
-                      borderColor: selectedDocuments.includes(doc.id) ? "primary.main" : "divider",
-                      bgcolor: selectedDocuments.includes(doc.id) ? "action.selected" : "transparent",
-                    }}
-                    secondaryAction={
-                      <IconButton
-                        edge="end"
-                        size="small"
-                        onClick={(e) => { e.stopPropagation(); deleteDocument(doc.id); }}
-                      >
-                        <DeleteIcon fontSize="small" color="error" />
-                      </IconButton>
-                    }
-                  >
-                    <ListItemText
-                      primary={doc.filename}
-                      secondary={`${doc.content_length} chars`}
-                      primaryTypographyProps={{ fontSize: "0.8rem", fontWeight: 500 }}
-                      secondaryTypographyProps={{ fontSize: "0.7rem" }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </Box>
-        </Box>
-      </Paper>
+  return (
+    <Box sx={{ display: "flex", height: "100%", overflow: "hidden" }}>
+      {/* Sidebar — permanent on desktop, drawer on mobile */}
+      {isMobile ? (
+        <Drawer
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          sx={{ "& .MuiDrawer-paper": { width: 280 } }}
+        >
+          {sidebarContent}
+        </Drawer>
+      ) : (
+        <Paper
+          sx={{
+            width: 260,
+            borderRadius: 0,
+            borderRight: 1,
+            borderColor: "divider",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {sidebarContent}
+        </Paper>
+      )}
 
       {/* Main chat area */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Selected docs banner */}
         {selectedDocuments.length > 0 && (
           <Box sx={{ px: 2, py: 1, bgcolor: "primary.50", borderBottom: 1, borderColor: "divider", display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
@@ -308,7 +329,7 @@ export default function ChatTab() {
         )}
 
         {/* Messages */}
-        <Box sx={{ flex: 1, p: 2, overflow: "auto", display: "flex", flexDirection: "column" }}>
+        <Box sx={{ flex: 1, p: { xs: 1, sm: 2 }, overflow: "auto", display: "flex", flexDirection: "column" }}>
           {messages.map((msg, idx) => (
             <Box
               key={idx}
@@ -318,8 +339,8 @@ export default function ChatTab() {
                 sx={{
                   px: 2,
                   py: 1.2,
-                  maxWidth: msg.role === "assistant" ? 800 : 420,
-                  minWidth: 200,
+                  maxWidth: { xs: "90%", sm: msg.role === "assistant" ? 800 : 420 },
+                  minWidth: { xs: 100, sm: 200 },
                   bgcolor: msg.role === "user" ? "primary.main" : "grey.100",
                   color: msg.role === "user" ? "primary.contrastText" : "text.primary",
                   borderRadius: 2,
@@ -355,25 +376,34 @@ export default function ChatTab() {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
-            px: 2,
-            py: 1.5,
+            gap: 0.5,
+            px: { xs: 1, sm: 2 },
+            py: 1,
             borderTop: 1,
             borderColor: "divider",
             bgcolor: "background.paper",
+            flexWrap: isMobile ? "wrap" : "nowrap",
           }}
         >
+          {/* Mobile sidebar toggle */}
+          {isMobile && (
+            <IconButton size="small" onClick={() => setDrawerOpen(true)}>
+              <MenuIcon />
+            </IconButton>
+          )}
+
           <input type="file" accept=".pdf,.docx,.csv,.xlsx,.txt" hidden ref={fileInputRef} onChange={handleFileSelect} />
           <IconButton
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
             color={file ? "primary" : "default"}
             title="Attach a file"
+            size="small"
           >
             {isUploading ? <HourglassEmptyIcon /> : <AttachFileIcon />}
           </IconButton>
 
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl size="small" sx={{ minWidth: isMobile ? 110 : 180 }}>
             <InputLabel>Model</InputLabel>
             <Select value={model} label="Model" onChange={(e) => setModel(e.target.value)}>
               <MenuItem value="PersonalAssistant" sx={{ color: "#a78bfa" }}>PersonalAssistant</MenuItem>
@@ -385,37 +415,51 @@ export default function ChatTab() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 100 }}>
-            <InputLabel>Mode</InputLabel>
-            <Select value={mode} label="Mode" onChange={(e) => setMode(e.target.value)}>
-              <MenuItem value="general">General</MenuItem>
-              <MenuItem value="code">Code</MenuItem>
-            </Select>
-          </FormControl>
+          {!isMobile && (
+            <FormControl size="small" sx={{ minWidth: 100 }}>
+              <InputLabel>Mode</InputLabel>
+              <Select value={mode} label="Mode" onChange={(e) => setMode(e.target.value)}>
+                <MenuItem value="general">General</MenuItem>
+                <MenuItem value="code">Code</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
           <TextField
             size="small"
             fullWidth
-            placeholder={
+            placeholder={isMobile ? "Type a message..." : (
               file
                 ? `File ready: ${file.name} (add a question, then send)`
                 : "Type your question, drag a file, or click the paperclip..."
-            }
+            )}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isUploading}
-            autoFocus
+            autoFocus={!isMobile}
+            sx={{ flex: 1, minWidth: 0 }}
           />
 
-          <Button
+          <IconButton
             type="submit"
-            variant="contained"
-            endIcon={<SendIcon />}
+            color="primary"
             disabled={isUploading}
-            sx={{ whiteSpace: "nowrap" }}
+            sx={isMobile ? {} : { display: "none" }}
           >
-            {isUploading ? "Uploading..." : "Send"}
-          </Button>
+            <SendIcon />
+          </IconButton>
+
+          {!isMobile && (
+            <Button
+              type="submit"
+              variant="contained"
+              endIcon={<SendIcon />}
+              disabled={isUploading}
+              sx={{ whiteSpace: "nowrap" }}
+            >
+              {isUploading ? "Uploading..." : "Send"}
+            </Button>
+          )}
         </Box>
       </Box>
     </Box>

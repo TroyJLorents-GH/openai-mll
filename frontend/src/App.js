@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Box, Tabs, Tab, Typography, Button, Avatar, CircularProgress } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Button, Avatar, CircularProgress, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MatchTab from "./pages/MatchTab";
@@ -13,6 +13,8 @@ export default function App() {
   const [tab, setTab] = useState(0);
   const [vmResumes, setVmResumes] = useState([]);
   const { user, loading, login, logout, getToken } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Wire up apiFetch with the token provider
   useEffect(() => {
@@ -54,13 +56,14 @@ export default function App() {
           alignItems: "center",
           height: "100vh",
           gap: 3,
+          px: 2,
         }}
       >
-        <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+        <Typography variant={isMobile ? "h5" : "h4"} sx={{ fontWeight: 700, letterSpacing: "-0.02em", textAlign: "center" }}>
           Resume Match{" "}
           <Box component="span" sx={{ color: "primary.main" }}>AI</Box>
         </Typography>
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant="body1" color="text.secondary" sx={{ textAlign: "center" }}>
           Sign in to manage your resumes and match them to jobs.
         </Typography>
         <Button
@@ -81,40 +84,48 @@ export default function App() {
       {/* Header */}
       <Box
         sx={{
-          px: 3,
-          py: 1.5,
+          px: { xs: 1.5, sm: 3 },
+          py: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           borderBottom: 1,
           borderColor: "divider",
           bgcolor: "background.paper",
+          gap: 1,
+          flexWrap: "wrap",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+        <Typography variant={isMobile ? "h6" : "h5"} sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
           Resume Match{" "}
           <Box component="span" sx={{ color: "primary.main" }}>AI</Box>
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 2 } }}>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} textColor="primary" indicatorColor="primary">
-            <Tab label="Match" />
-            <Tab label="Chat" />
+            <Tab label="Match" sx={{ minWidth: isMobile ? 48 : 90, px: isMobile ? 1 : 2 }} />
+            <Tab label="Chat" sx={{ minWidth: isMobile ? 48 : 90, px: isMobile ? 1 : 2 }} />
           </Tabs>
 
           <Avatar
             src={user.photoURL}
             alt={user.displayName}
-            sx={{ width: 32, height: 32 }}
+            sx={{ width: 28, height: 28 }}
           />
-          <Button
-            size="small"
-            startIcon={<LogoutIcon />}
-            onClick={logout}
-            sx={{ textTransform: "none" }}
-          >
-            Logout
-          </Button>
+          {isMobile ? (
+            <IconButton size="small" onClick={logout}>
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          ) : (
+            <Button
+              size="small"
+              startIcon={<LogoutIcon />}
+              onClick={logout}
+              sx={{ textTransform: "none" }}
+            >
+              Logout
+            </Button>
+          )}
         </Box>
       </Box>
 

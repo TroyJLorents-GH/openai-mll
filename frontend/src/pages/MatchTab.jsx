@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import {
   Box, Typography, Button, TextField, Paper, Chip, Alert, IconButton,
   LinearProgress, List, ListItem, ListItemText, ListItemSecondaryAction,
-  CircularProgress, Collapse,
+  CircularProgress, Collapse, useMediaQuery, useTheme,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -23,11 +23,13 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
   const [uploading, setUploading] = useState(false);
   const [matching, setMatching] = useState(false);
   const [error, setError] = useState("");
-  const [tailoring, setTailoring] = useState({}); // { [documentId]: true }
-  const [tailorResults, setTailorResults] = useState({}); // { [documentId]: "suggestions..." }
-  const [tailorExpanded, setTailorExpanded] = useState({}); // { [documentId]: true }
-  const [detailsExpanded, setDetailsExpanded] = useState({}); // { [documentId]: true }
+  const [tailoring, setTailoring] = useState({});
+  const [tailorResults, setTailorResults] = useState({});
+  const [tailorExpanded, setTailorExpanded] = useState({});
+  const [detailsExpanded, setDetailsExpanded] = useState({});
   const fileInputRef = useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -35,14 +37,12 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
     setUploading(true);
     setError("");
     try {
-      // Upload to VM API for Doc Intelligence analysis
       const form = new FormData();
       form.append("file", file);
       const resp = await apiFetch(`${API}/vm/analyze`, { method: "POST", body: form });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || "Analysis failed");
 
-      // Also upload to local backend for chat context
       const localForm = new FormData();
       localForm.append("file", file);
       await apiFetch(`${API}/upload`, { method: "POST", body: localForm });
@@ -91,14 +91,12 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
     setTailoring((prev) => ({ ...prev, [docId]: true }));
     setError("");
     try {
-      // Fetch full resume text from VM API
       const docResp = await apiFetch(`${API}/vm/documents/${docId}`);
       const docData = await docResp.json();
       if (!docResp.ok) throw new Error(docData.error || "Failed to fetch resume");
       const resumeText = docData.fullText || docData.extractedText || "";
       if (!resumeText) throw new Error("No resume text found for this document");
 
-      // Send to ResumeAgent for tailoring
       const resp = await apiFetch(`${API}/tailor-resume`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,10 +120,21 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
   };
 
   return (
-    <Box sx={{ height: "100%", overflow: "auto", p: 3 }}>
-      <Box sx={{ display: "flex", gap: 3, alignItems: "flex-start" }}>
+    <Box sx={{ height: "100%", overflow: "auto", p: { xs: 1.5, sm: 3 } }}>
+      <Box sx={{
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        gap: { xs: 2, sm: 3 },
+        alignItems: "flex-start",
+      }}>
         {/* Left panel: Upload + Resume list */}
-        <Paper sx={{ width: 340, p: 2, flexShrink: 0, position: "sticky", top: 0 }}>
+        <Paper sx={{
+          width: isMobile ? "100%" : 340,
+          p: 2,
+          flexShrink: 0,
+          position: isMobile ? "static" : "sticky",
+          top: 0,
+        }}>
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
             Resumes
           </Typography>
@@ -159,6 +168,7 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
                   <ListItemText
                     primary={doc.filename || doc.name || doc.id}
                     secondary={doc.uploadedAt ? `Analyzed ${new Date(doc.uploadedAt).toLocaleDateString()}` : null}
+                    primaryTypographyProps={{ noWrap: true, fontSize: { xs: "0.85rem", sm: "1rem" } }}
                   />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" size="small" onClick={() => handleDelete(doc.id)}>
@@ -172,14 +182,14 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
         </Paper>
 
         {/* Right panel: Job description + Results */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 0, width: isMobile ? "100%" : "auto" }}>
           <Paper sx={{ p: 2, mb: 2 }}>
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
               Job Description
             </Typography>
             <TextField
               multiline
-              minRows={4}
+              minRows={3}
               maxRows={8}
               fullWidth
               placeholder="Paste the job description here..."
@@ -192,6 +202,7 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
               startIcon={matching ? <CircularProgress size={18} color="inherit" /> : <WorkIcon />}
               onClick={handleMatch}
               disabled={matching || !jobDescription.trim() || vmResumes.length === 0}
+              fullWidth={isMobile}
             >
               {matching ? "Matching..." : "Match Resumes"}
             </Button>
@@ -208,7 +219,6 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
           {/* Results */}
           {matchResults && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {/* Top-level recommendation */}
               {matchResults.recommendation && (
                 <Alert
                   severity={
@@ -236,8 +246,15 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
 
               {(matchResults.matches || []).map((result, idx) => (
                 <Paper key={idx} sx={{ p: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  <Box sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    mb: 1,
+                    flexWrap: "wrap",
+                    gap: 1,
+                  }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, minWidth: 0, wordBreak: "break-word" }}>
                       {result.filename || `Resume ${idx + 1}`}
                     </Typography>
                     <Chip
@@ -309,7 +326,12 @@ export default function MatchTab({ vmResumes, refreshVmResumes }) {
                     </Button>
                     <Collapse in={!!detailsExpanded[result.documentId]}>
                       <Paper variant="outlined" sx={{ mt: 1, p: 2, bgcolor: "grey.50" }}>
-                        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2, mb: 2 }}>
+                        <Box sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+                          gap: 2,
+                          mb: 2,
+                        }}>
                           <Box>
                             <Typography variant="caption" color="text.secondary">AI Search Score (RRF)</Typography>
                             <Typography variant="h6" sx={{ fontWeight: 700 }}>

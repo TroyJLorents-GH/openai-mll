@@ -4,53 +4,13 @@
     "company": "SBS Creatix",
     "location": "Phoenix, AZ",
     "salary": "$120,000 - $160,000",
-    "description": "What You'll Do:
-
-      Lead architecture and design decisions for end-to-end solutions spanning backend, frontend, data pipelines, and AI/ML models.
-      Develop production-grade applications, including full-stack and CRM solutions, that transform data into actionable insights for enterprise users.
-      Design, build, and maintain scalable cloud infrastructure and CI/CD pipelines to support reliable, high-performance deployments.
-      Collaborate closely with client teams, from engineers to executives, to deeply understand business challenges and deliver tailored solutions.
-      Integrate and fine-tune LLMs and GenAI tools including API orchestration, prompt engineering, and adversarial testing to improve model accuracy and reliability.
-      Partner with internal teams to ensure seamless solution delivery and contribute reusable frameworks and best practices.
-      What We're Looking For:
-      Strong full-stack software engineering skills across backend, frontend, and system integration. Proficiency in Python, SQL, Java/Scala, JavaScript/TypeScript, and modern frameworks (React, FastAPI, Flask, Next.js).
-      Experience designing, building, and deploying production applications with data and AI/ML components.
-      Hands-on experience with cloud platforms (AWS — ECS, Fargate, Lambda, S3, Snowflake, Airflow) and infrastructure tooling (Terraform, Docker).
-      Proficiency with CI/CD tools and DevOps practices including CircleCI, GitHub Actions, and monorepo architecture.
-      Experience integrating and working with LLMs and GenAI frameworks including LangChain, GraphRAG, OpenAI API, and similar tools.
-      Familiarity with adversarial testing, red-teaming, and prompt fine-tuning to improve model performance and security.
-      Proven ability to deliver technical solutions that drive measurable outcomes for enterprise clients.
-      Excellent communication skills and ability to engage with diverse stakeholders.
-      Curiosity, adaptability, and a passion for learning new technologies."
+    "description": "What You'll Do:\nLead architecture and design decisions for end-to-end solutions spanning backend, frontend, data pipelines, and AI/ML models.\nDevelop production-grade applications, including full-stack and CRM solutions, that transform data into actionable insights for enterprise users.\nDesign, build, and maintain scalable cloud infrastructure and CI/CD pipelines to support reliable, high-performance deployments.\nCollaborate closely with client teams, from engineers to executives, to deeply understand business challenges and deliver tailored solutions.\nIntegrate and fine-tune LLMs and GenAI tools including API orchestration, prompt engineering, and adversarial testing to improve model accuracy and reliability.\nPartner with internal teams to ensure seamless solution delivery and contribute reusable frameworks and best practices.\nWhat We're Looking For:\nStrong full-stack software engineering skills across backend, frontend, and system integration. Proficiency in Python, SQL, Java/Scala, JavaScript/TypeScript, and modern frameworks (React, FastAPI, Flask, Next.js).\nExperience designing, building, and deploying production applications with data and AI/ML components.\nHands-on experience with cloud platforms (AWS — ECS, Fargate, Lambda, S3, Snowflake, Airflow) and infrastructure tooling (Terraform, Docker).\nProficiency with CI/CD tools and DevOps practices including CircleCI, GitHub Actions, and monorepo architecture.\nExperience integrating and working with LLMs and GenAI frameworks including LangChain, GraphRAG, OpenAI API, and similar tools.\nFamiliarity with adversarial testing, red-teaming, and prompt fine-tuning to improve model performance and security.\nProven ability to deliver technical solutions that drive measurable outcomes for enterprise clients.\nExcellent communication skills and ability to engage with diverse stakeholders.\nCuriosity, adaptability, and a passion for learning new technologies."
   },
   {
     "title": ".NET Developer ",
     "company": "Emerald Resource Group",
     "location": "Remote",
     "salary": "$125,000+",
-    "description": "This role is ideal for a hands-on .NET Web Developer who enjoys working across the full software development lifecycle and contributing to business-critical systems. You will join a collaborative development team responsible for building, enhancing, and supporting high-traffic ecommerce and internal applications that directly impact the business.
-      What You Will Do
-      Design, develop, test, and maintain applications using C#, .NET, SQL. Entity Framework and SQL
-      Execute full lifecycle software development from requirements through deployment
-      Write clean, efficient, and well-documented code
-      Collaborate with cross-functional teams to assess technical feasibility and system design
-      Integrate software components into scalable, fully functional systems
-      Develop and execute software verification and quality assurance procedures
-      Create and maintain technical documentation including specifications and workflows
-      Serve as a technical resource and mentor for other developers
-      Recommend improvements to tools, processes, and development standards
-      Stay current with modern development tools and best practices
-      Required Qualifications
-      Bachelor’s degree in Computer Science, Engineering, Information Technology, or a related field
-      4 or more years of professional software development experience
-      Strong hands-on experience with C# and .NET
-      Solid understanding of object-oriented programming principles
-      Experience working with relational databases and SQL Server
-      Experience with full software development lifecycle methodologies
-      Must be legally authorized to work in the United States without sponsorship
-      Nice to Have
-      Experience with front-end technologies such as React, Angular, Vue, JavaScript, HTML, CSS, or jQuery
-      Exposure to Unix or Linux environments
-      Experience supporting or modernizing legacy systems Knowledge of data communications or socket-based integrations"
+    "description": "This role is ideal for a hands-on .NET Web Developer who enjoys working across the full software development lifecycle and contributing to business-critical systems. You will join a collaborative development team responsible for building, enhancing, and supporting high-traffic ecommerce and internal applications that directly impact the business.\nWhat You Will Do\nDesign, develop, test, and maintain applications using C#, .NET, SQL. Entity Framework and SQL\nExecute full lifecycle software development from requirements through deployment\nWrite clean, efficient, and well-documented code\nCollaborate with cross-functional teams to assess technical feasibility and system design\nIntegrate software components into scalable, fully functional systems\nDevelop and execute software verification and quality assurance procedures\nCreate and maintain technical documentation including specifications and workflows\nServe as a technical resource and mentor for other developers\nRecommend improvements to tools, processes, and development standards\nStay current with modern development tools and best practices\nRequired Qualifications\nBachelor’s degree in Computer Science, Engineering, Information Technology, or a related field\n4 or more years of professional software development experience\nStrong hands-on experience with C# and .NET\nSolid understanding of object-oriented programming principles\nExperience working with relational databases and SQL Server\nExperience with full software development lifecycle methodologies\nMust be legally authorized to work in the United States without sponsorship\nNice to Have\nExperience with front-end technologies such as React, Angular, Vue, JavaScript, HTML, CSS, or jQuery\nExposure to Unix or Linux environments\nExperience supporting or modernizing legacy systems Knowledge of data communications or socket-based integrations"
   }
 ]

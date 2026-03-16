@@ -124,7 +124,9 @@ export const handler = async (event) => {
 
     let response;
     if (model === "PersonalAssistant") {
-      response = await handleFoundryChat(message);
+      // Inject userId so the agent passes it when calling Document Intelligence tools
+      const enrichedMessage = `[System: When calling Document Intelligence API tools (getDocuments, searchDocuments, semanticSearch), always pass userId="${auth.userId}" as a query parameter.]\n\n${message}`;
+      response = await handleFoundryChat(enrichedMessage);
     } else {
       response = await handleOpenAIChat(message, model, mode);
     }
